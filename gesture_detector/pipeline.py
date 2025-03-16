@@ -5,7 +5,6 @@ from gesture_detector.classifier import FFNClassifier
 from gesture_detector.pose_detection.base import PoseDetector
 from gesture_detector.feature_extraction import FeatureExtractor
 
-
 class GestureDetectorPipeline:
     def __init__(
             self,

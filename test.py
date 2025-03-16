@@ -22,12 +22,18 @@ def show_cam_pose():
         pose = posedetector.get_pose()
         feature_vector = feature_extractor.extract_features(pose)
         print(len(feature_vector))
+        if feature_vector is None:
+            print("Error: feature_vector is None!")
+        else:
+            print(len(feature_vector))
+
 
 def main():
-    buffer  = Buffer(5)
+    buffer = Buffer(5)
     for i in range(100):
         buffer.add(np.array([i, i ** 2, i ** 3]))
         print(buffer.get_flatten())
+
 
 if __name__ == '__main__':
     # main()

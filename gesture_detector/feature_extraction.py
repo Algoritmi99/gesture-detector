@@ -66,6 +66,7 @@ class FeatureExtractor:
                         ((y - lastY) ** 2)
                     ) / (raw_landmarks["timestamp"] - self.last_time)
                 ))
+
                 # Acceleration
                 v_x = out[len(out) - 3]
                 v_y = out[len(out) - 2]
