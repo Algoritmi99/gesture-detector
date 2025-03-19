@@ -2,6 +2,7 @@ from collections import Counter
 
 import light
 import pandas as pd
+import numpy as np
 from light.trainer import Trainer
 
 from gesture_detector.buffer import Buffer
@@ -18,14 +19,8 @@ def train_new(dataset: tuple[pd.DataFrame, pd.DataFrame], pose_detector: PoseDet
     :param dataset: tuple of (pd.DataFrame: raw features, pd.DataFrame: gesture labels)
     :return: trained GestureDetectorPipeline
     """
-    # Build the datasets
     x, y = dataset[0], dataset[1]
     assert len(x) == len(y)
-
-    class PoseLandmark:
-        def __init__(self, x, y):
-            self.x = x
-            self.y = y
 
     important_poses = [
         "left_shoulder",
@@ -41,21 +36,27 @@ def train_new(dataset: tuple[pd.DataFrame, pd.DataFrame], pose_detector: PoseDet
         "left_thumb",
         "right_thumb",
     ]
+
+    class PoseLandmark:
+        def __init__(self, x, y, z, confidence):
+            self.x = x
+            self.y = y
+            self.z = z
+            self.confidence = confidence
+
     def convert_dataframe(df):
         structured_data = []
         for _, row in df.iterrows():
-            # Convert each row into the expected dictionary format
             row_dict = {
-                pose: PoseLandmark(row[f"{pose}_x"], row[f"{pose}_y"])
+                pose: PoseLandmark(row[f"{pose}_x"], row[f"{pose}_y"], row[f"{pose}_z"], row[f"{pose}_confidence"])
                 for pose in important_poses
                 if f"{pose}_x" in row and f"{pose}_y" in row
             }
-            row_dict["timestamp"] = row["timestamp"]  # Ensure timestamp is included
+            row_dict["timestamp"] = row["timestamp"]
             structured_data.append(row_dict)
 
         return structured_data
 
-    # Convert the dataframe
     structured_landmarks = convert_dataframe(x)
 
     feature_extractor = FeatureExtractor()
@@ -65,12 +66,15 @@ def train_new(dataset: tuple[pd.DataFrame, pd.DataFrame], pose_detector: PoseDet
     # features = pd.DataFrame(x.apply(lambda row: feature_extractor.extract_features(row.to_dict()), axis=1).tolist())
 
     pca = light.PCA(variance_threshold=0.99)
-    reduced_features = pd.DataFrame(pca.fit_transform(features.to_numpy()))
-
+    # reduced_features = pd.DataFrame(pca.fit_transform(features.to_numpy()))
+    reduced_features = pca.fit_transform(features.to_numpy())
+    reduced_features = np.real(reduced_features)
+    reduced_features = np.nan_to_num(reduced_features)
+    reduced_features = pd.DataFrame(reduced_features)
     assert len(reduced_features) == len(y)
 
-    one_hot_encoder = light.OneHotEncoder(y.iloc[:, 0].unique())
-    # one_hot_encoder = light.OneHotEncoder(y.unique())
+    # one_hot_encoder = light.OneHotEncoder(y.iloc[:, 0].unique())
+    one_hot_encoder = light.OneHotEncoder(y.unique())
 
     buffer_size = 100 // pca.n_components
     buffer_size = int(buffer_size)
@@ -78,12 +82,17 @@ def train_new(dataset: tuple[pd.DataFrame, pd.DataFrame], pose_detector: PoseDet
     buffer_x = Buffer(buffer_size)
     buffer_y = Buffer(buffer_size)
 
-    nn_dataset_x = pd.DataFrame()
-    nn_dataset_y = pd.DataFrame()
+    # nn_dataset_x = pd.DataFrame()
+    # nn_dataset_y = pd.DataFrame()
+    num_features = reduced_features.shape[1]
+    nn_dataset_x = pd.DataFrame(columns=[f'feature_{i}' for i in range(num_features)])
+    num_classes = len(y.unique())
+    nn_dataset_y = pd.DataFrame(columns=[f'class_{i}' for i in range(num_classes)])
 
     for idx in range(len(reduced_features)):
         buffer_x.add(reduced_features.iloc[idx].to_numpy())
-        buffer_y.add(y.iloc[idx].numpy())
+        buffer_y.add(y.iloc[idx])
+        # buffer_y.add(y.iloc[idx].numpy())
 
         next_x = buffer_x.get_flatten()
         next_y = buffer_y.get_flatten()
@@ -92,8 +101,11 @@ def train_new(dataset: tuple[pd.DataFrame, pd.DataFrame], pose_detector: PoseDet
             label = Counter(next_y.tolist()).most_common(1)[0][0]
             next_y = one_hot_encoder.encode(label)
 
-            nn_dataset_x.loc[len(nn_dataset_x)] = next_x
-            nn_dataset_y.loc[len(nn_dataset_y)] = next_y
+            # nn_dataset_x.loc[len(nn_dataset_x)] = next_x
+            nn_dataset_x = pd.concat([nn_dataset_x, pd.DataFrame([next_x])], ignore_index=True)
+            # nn_dataset_y.loc[len(nn_dataset_y)] = next_y
+            nn_dataset_y = pd.concat([nn_dataset_y, pd.DataFrame([next_y], columns=nn_dataset_y.columns)],
+                                     ignore_index=True)
 
     X_train, X_test, y_train, y_test = light.train_test_split(nn_dataset_x, nn_dataset_y, 0.8)
 
@@ -101,7 +113,8 @@ def train_new(dataset: tuple[pd.DataFrame, pd.DataFrame], pose_detector: PoseDet
     net = FFNClassifier(
         X_train.shape[1],
         int(X_train.shape[1] * 0.2),
-        len(y.iloc[:, 0].unique())
+        # len(y.iloc[:, 0].unique())
+        len(y.unique())
     )
 
     optimizer = light.SGD(net, light.CrossEntropyLoss(), 0.01)
@@ -125,7 +138,8 @@ def train_new(dataset: tuple[pd.DataFrame, pd.DataFrame], pose_detector: PoseDet
         pose_detector,
         Buffer(buffer_size),
         pca,
-        y.iloc[:, 0].unique().tolist(),
+        # y.iloc[:, 0].unique().tolist(),
+        y.unique().tolist(),
         net
     )
 
