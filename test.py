@@ -21,7 +21,7 @@ def show_cam_pose():
     while True:
         pose = posedetector.get_pose()
         feature_vector = feature_extractor.extract_features(pose)
-        print(len(feature_vector))
+        print(len(feature_vector) if feature_extractor is not None else None)
 
 def main():
     buffer  = Buffer(5)
