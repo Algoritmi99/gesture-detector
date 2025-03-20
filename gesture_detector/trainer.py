@@ -22,54 +22,14 @@ def train_new(dataset: tuple[pd.DataFrame, pd.DataFrame], pose_detector: PoseDet
     x, y = dataset[0], dataset[1]
     assert len(x) == len(y)
 
-    important_poses = [
-        "left_shoulder",
-        "right_shoulder",
-        "left_elbow",
-        "right_elbow",
-        "left_wrist",
-        "right_wrist",
-        "left_pinky",
-        "right_pinky",
-        "left_index",
-        "right_index",
-        "left_thumb",
-        "right_thumb",
-    ]
-
-    class PoseLandmark:
-        def __init__(self, x, y, z, confidence):
-            self.x = x
-            self.y = y
-            self.z = z
-            self.confidence = confidence
-
-    def convert_dataframe(df):
-        structured_data = []
-        for _, row in df.iterrows():
-            row_dict = {
-                pose: PoseLandmark(row[f"{pose}_x"], row[f"{pose}_y"], row[f"{pose}_z"], row[f"{pose}_confidence"])
-                for pose in important_poses
-                if f"{pose}_x" in row and f"{pose}_y" in row
-            }
-            row_dict["timestamp"] = row["timestamp"]
-            structured_data.append(row_dict)
-
-        return structured_data
-
-    structured_landmarks = convert_dataframe(x)
-
     feature_extractor = FeatureExtractor()
-    features = pd.DataFrame(
-        [feature_extractor.extract_features(landmark_dict) for landmark_dict in structured_landmarks])
-
-    # features = pd.DataFrame(x.apply(lambda row: feature_extractor.extract_features(row.to_dict()), axis=1).tolist())
+    features = pd.DataFrame(x.apply(lambda row: feature_extractor.extract_features(row.to_dict()), axis=1).tolist())
 
     pca = light.PCA(variance_threshold=0.99)
     # reduced_features = pd.DataFrame(pca.fit_transform(features.to_numpy()))
     reduced_features = pca.fit_transform(features.to_numpy())
     reduced_features = np.real(reduced_features)
-    reduced_features = np.nan_to_num(reduced_features)
+    # reduced_features = np.nan_to_num(reduced_features)
     reduced_features = pd.DataFrame(reduced_features)
     assert len(reduced_features) == len(y)
 
@@ -120,15 +80,20 @@ def train_new(dataset: tuple[pd.DataFrame, pd.DataFrame], pose_detector: PoseDet
     optimizer = light.SGD(net, light.CrossEntropyLoss(), 0.01)
 
     trainer = Trainer(optimizer, plot=True)
-    net = trainer.train((X_train, y_train), 600, progress_bar=True)
+    X_train = X_train.fillna(float(0))
+
+    net = trainer.train((X_train, y_train), 10, progress_bar=True)
     assert isinstance(net, FFNClassifier)
 
     # Accuracy on unseen data
     correct = 0
     false = 0
     for idx in range(len(X_test)):
-        pred_label = one_hot_encoder.decode(net(X_test.iloc[idx].to_numpy()))
-        if pred_label == one_hot_encoder.decode(y_test.iloc[idx].to_numpy()):
+        # X_test = X_test.fillna(float(0))
+        # print(X_test.head())
+        pred_label = one_hot_encoder.decode(X_test.iloc[idx].to_numpy())
+        # if pred_label == one_hot_encoder.decode(y_test.iloc[idx].to_numpy()):
+        if pred_label == one_hot_encoder.decode(y_test.to_numpy()):
             correct += 1
         else:
             false += 1

@@ -31,5 +31,8 @@ pose_detector = LiveFeedPoseDetector("0", keypoint_names, show_feed=True)
 
 model = train_new((X, y), pose_detector)
 label = model.process()
+print(label)
 
 asyncio.run(send_command(label))
+msg = "right"
+asyncio.run(send_command(msg))

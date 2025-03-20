@@ -44,18 +44,28 @@ class FeatureExtractor:
         # - Per joint:
         #       raw_pos_x, raw_pos_y, velocity, acceleration
         for pose_name in important_poses:
-            out.append(float(raw_landmarks[pose_name].x))
-            out.append(float(raw_landmarks[pose_name].y))
-            xs.append(float(raw_landmarks[pose_name].x))
-            ys.append(float(raw_landmarks[pose_name].y))
+            if 'left_shoulder_x' not in raw_landmarks.keys():
+                out.append(float(raw_landmarks[pose_name].x))
+                out.append(float(raw_landmarks[pose_name].y))
+                xs.append(float(raw_landmarks[pose_name].x))
+                ys.append(float(raw_landmarks[pose_name].y))
+            else:
+                out.append(float(raw_landmarks[f"{pose_name}_x"]))
+                out.append(float(raw_landmarks[f"{pose_name}_y"]))
+                xs.append(float(raw_landmarks[f"{pose_name}_x"]))
+                ys.append(float(raw_landmarks[f"{pose_name}_y"]))
 
             # Add velocity and acceleration if this is not the first vector being made, otherwise 0
             if self.last_time is None and self.last_vector is None:
                 out.extend([0] * 6)
             else:
                 # Velocity
-                x = raw_landmarks[pose_name].x
-                y = raw_landmarks[pose_name].y
+                if 'left_shoulder_x' not in raw_landmarks.keys():
+                    x = raw_landmarks[pose_name].x
+                    y = raw_landmarks[pose_name].y
+                else:
+                    x = raw_landmarks[f"{pose_name}_x"]
+                    y = raw_landmarks[f"{pose_name}_y"]
                 lastX = self.last_vector[len(out) - 2]
                 lastY = self.last_vector[len(out) - 1]
 
@@ -89,29 +99,66 @@ class FeatureExtractor:
         #       Distance between joints, Angle between joints, change in angles
         for j1, j2 in pose_pairs:
             # distance between joints
-            out.append(
-                float(np.sqrt(
-                    ((raw_landmarks[j1].x - raw_landmarks[j2].x) ** 2) +
-                    ((raw_landmarks[j1].y - raw_landmarks[j2].y) ** 2)
-                )
-            ))
+            if 'left_shoulder_x' not in raw_landmarks.keys():
+                out.append(
+                    float(np.sqrt(
+
+                        ((raw_landmarks[j1].x - raw_landmarks[j2].x) ** 2) +
+                        ((raw_landmarks[j1].y - raw_landmarks[j2].y) ** 2)
+                        # ((raw_landmarks[f"{j1}_x"] - raw_landmarks[f"{j2}_x"]) ** 2) +
+                        # ((raw_landmarks[f"{j1}_y"] - raw_landmarks[f"{j2}_y"]) ** 2)
+                    )
+                    ))
+            else:
+                out.append(
+                    float(np.sqrt(
+
+                        # ((raw_landmarks[j1].x - raw_landmarks[j2].x) ** 2) +
+                        # ((raw_landmarks[j1].y - raw_landmarks[j2].y) ** 2)
+                        ((raw_landmarks[f"{j1}_x"] - raw_landmarks[f"{j2}_x"]) ** 2) +
+                        ((raw_landmarks[f"{j1}_y"] - raw_landmarks[f"{j2}_y"]) ** 2)
+                    )
+                ))
             out.append(out[len(out) - 1] - self.last_vector[len(out) - 1] if self.last_vector is not None else 0)
             # Angle between joints
+        if 'left_shoulder_x' not in raw_landmarks.keys():
             out.append(
                 float(np.arccos(
                     ((raw_landmarks[j1].x * raw_landmarks[j2].x) + (raw_landmarks[j1].y * raw_landmarks[j2].y)) /
+                    # ((raw_landmarks[f"{j1}_x"] * raw_landmarks[f"{j2}_x"]) + (
+                    #             raw_landmarks[f"{j1}_y"] * raw_landmarks[f"{j2}_y"])) /
+                    (
+                            float(np.sqrt(
+                                (raw_landmarks[j1].x ** 2) + (raw_landmarks[j1].y ** 2)
+                                # (raw_landmarks[f"{j1}_x"] ** 2) + (raw_landmarks[f"{j1}_y"] ** 2)
+                            ))
+                            *
+                            float(np.sqrt(
+                                (raw_landmarks[j2].x ** 2) + (raw_landmarks[j2].y ** 2)
+                                # (raw_landmarks[f"{j2}_x"] ** 2) + (raw_landmarks[f"{j2}_y"] ** 2)
+                            ))
+                    )
+                )
+                ))
+        else:
+            out.append(
+                float(np.arccos(
+                    # ((raw_landmarks[j1].x * raw_landmarks[j2].x) + (raw_landmarks[j1].y * raw_landmarks[j2].y)) /
+                    ((raw_landmarks[f"{j1}_x"] * raw_landmarks[f"{j2}_x"]) + (raw_landmarks[f"{j1}_y"] * raw_landmarks[f"{j2}_y"])) /
                     (
                         float(np.sqrt(
-                            (raw_landmarks[j1].x ** 2) + (raw_landmarks[j1].y ** 2)
+                            # (raw_landmarks[j1].x ** 2) + (raw_landmarks[j1].y ** 2)
+                            (raw_landmarks[f"{j1}_x"] ** 2) + (raw_landmarks[f"{j1}_y"] ** 2)
                         ))
                         *
                         float(np.sqrt(
-                            (raw_landmarks[j2].x ** 2) + (raw_landmarks[j2].y ** 2)
+                            # (raw_landmarks[j2].x ** 2) + (raw_landmarks[j2].y ** 2)
+                            (raw_landmarks[f"{j2}_x"] ** 2) + (raw_landmarks[f"{j2}_y"] ** 2)
                         ))
                      )
                 )
             ))
-            out.append((out[len(out) - 1] - self.last_vector[len(out) - 1]) if self.last_vector is not None else 0)
+        out.append((out[len(out) - 1] - self.last_vector[len(out) - 1]) if self.last_vector is not None else 0)
 
 
         # - For all joints together:
