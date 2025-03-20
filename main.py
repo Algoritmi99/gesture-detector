@@ -23,7 +23,7 @@ def read_keypoint_names():
 
 
 df = pd.read_csv("data/zosia_csv_with_ground_truth_rotate.csv")
-y = df.iloc[:, -1]
+y = df.iloc[:, [-1]]
 X = df.iloc[:, :-1]
 
 keypoint_names = read_keypoint_names()

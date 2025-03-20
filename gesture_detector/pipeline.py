@@ -22,7 +22,7 @@ class GestureDetectorPipeline:
         self.one_hot_encoder = OneHotEncoder(gesture_list)
 
 
-        self.classifier.in_dim = pca.n_components * buffer.buffer_size
+        # self.classifier.in_dim = pca.n_components * buffer.buffer_size
         assert self.classifier.in_dim == pca.n_components * buffer.buffer_size
         assert self.classifier.out_dim == len(gesture_list)
 

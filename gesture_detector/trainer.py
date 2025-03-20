@@ -29,12 +29,12 @@ def train_new(dataset: tuple[pd.DataFrame, pd.DataFrame], pose_detector: PoseDet
     # reduced_features = pd.DataFrame(pca.fit_transform(features.to_numpy()))
     reduced_features = pca.fit_transform(features.to_numpy())
     reduced_features = np.real(reduced_features)
-    # reduced_features = np.nan_to_num(reduced_features)
+    reduced_features = np.nan_to_num(reduced_features)
     reduced_features = pd.DataFrame(reduced_features)
     assert len(reduced_features) == len(y)
 
-    # one_hot_encoder = light.OneHotEncoder(y.iloc[:, 0].unique())
-    one_hot_encoder = light.OneHotEncoder(y.unique())
+    one_hot_encoder = light.OneHotEncoder(y.iloc[:, 0].unique())
+    # one_hot_encoder = light.OneHotEncoder(y.unique())
 
     buffer_size = 100 // pca.n_components
     buffer_size = int(buffer_size)
@@ -46,13 +46,12 @@ def train_new(dataset: tuple[pd.DataFrame, pd.DataFrame], pose_detector: PoseDet
     # nn_dataset_y = pd.DataFrame()
     num_features = reduced_features.shape[1]
     nn_dataset_x = pd.DataFrame(columns=[f'feature_{i}' for i in range(num_features)])
-    num_classes = len(y.unique())
+    num_classes = len(y.iloc[:, 0].unique())
     nn_dataset_y = pd.DataFrame(columns=[f'class_{i}' for i in range(num_classes)])
 
     for idx in range(len(reduced_features)):
         buffer_x.add(reduced_features.iloc[idx].to_numpy())
-        buffer_y.add(y.iloc[idx])
-        # buffer_y.add(y.iloc[idx].numpy())
+        buffer_y.add(y.iloc[idx].to_numpy())
 
         next_x = buffer_x.get_flatten()
         next_y = buffer_y.get_flatten()
@@ -73,8 +72,8 @@ def train_new(dataset: tuple[pd.DataFrame, pd.DataFrame], pose_detector: PoseDet
     net = FFNClassifier(
         X_train.shape[1],
         int(X_train.shape[1] * 0.2),
-        # len(y.iloc[:, 0].unique())
-        len(y.unique())
+        len(y.iloc[:, 0].unique())
+        # len(y.unique())
     )
 
     optimizer = light.SGD(net, light.CrossEntropyLoss(), 0.01)
@@ -89,11 +88,9 @@ def train_new(dataset: tuple[pd.DataFrame, pd.DataFrame], pose_detector: PoseDet
     correct = 0
     false = 0
     for idx in range(len(X_test)):
-        # X_test = X_test.fillna(float(0))
-        # print(X_test.head())
         pred_label = one_hot_encoder.decode(X_test.iloc[idx].to_numpy())
-        # if pred_label == one_hot_encoder.decode(y_test.iloc[idx].to_numpy()):
-        if pred_label == one_hot_encoder.decode(y_test.to_numpy()):
+        if pred_label == one_hot_encoder.decode(y_test.iloc[idx].to_numpy()):
+        # if pred_label == one_hot_encoder.decode(y_test.to_numpy()):
             correct += 1
         else:
             false += 1
@@ -103,8 +100,8 @@ def train_new(dataset: tuple[pd.DataFrame, pd.DataFrame], pose_detector: PoseDet
         pose_detector,
         Buffer(buffer_size),
         pca,
-        # y.iloc[:, 0].unique().tolist(),
-        y.unique().tolist(),
+        y.iloc[:, 0].unique().tolist(),
+        # y.unique().tolist(),
         net
     )
 
