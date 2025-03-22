@@ -1,3 +1,6 @@
+import os
+import pickle
+
 from light import PCA, OneHotEncoder
 
 from gesture_detector.buffer import Buffer
@@ -5,6 +8,18 @@ from gesture_detector.classifier import FFNClassifier
 from gesture_detector.pose_detection.base import PoseDetector
 from gesture_detector.feature_extraction import FeatureExtractor
 
+def save_pipeline(pipeline, save_path: str, file_name: str):
+    if not os.path.exists(save_path):
+        os.makedirs(save_path)
+    with open(save_path + "/" + file_name + ".gestpipe", "wb") as f:
+        pickle.dump(pipeline, f)
+
+
+def load_pipeline(path):
+    with open(path, "rb") as f:
+        agent = pickle.load(f)
+        assert isinstance(agent, GestureDetectorPipeline)
+        return agent
 
 class GestureDetectorPipeline:
     def __init__(
@@ -39,3 +54,12 @@ class GestureDetectorPipeline:
         label = self.one_hot_encoder.decode(self.classifier(in_next))
 
         return label
+
+    def save(self, save_path: str, file_name: str):
+        """
+        Saves the entire pipeline as a .gestpipe file.
+        :param save_path: The path to save the module to.
+        :param file_name: The file name to save the module to.
+        :return: null
+        """
+        save_pipeline(self, save_path, file_name)
