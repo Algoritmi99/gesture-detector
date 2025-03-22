@@ -45,6 +45,9 @@ class GestureDetectorPipeline:
         assert self.pose_detector is not None, "set pose detector!"
         pose = self.pose_detector.get_pose()
         feature_vector = self.feature_extractor.extract_features(pose)
+        if feature_vector is None:
+            return None
+
         feature_vector = self.pca.transform(feature_vector)
         self.buffer.add(feature_vector)
         in_next = self.buffer.get_flatten()

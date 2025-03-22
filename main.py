@@ -59,7 +59,7 @@ def train_and_save():
 
 
     print("Running Model Trainer...")
-    pipeline = train_new((x, y), None, 200, 0.2)
+    pipeline = train_new((x, y), None, 500, 0.4)
     pipeline.save("./pipelines", "gesture_detector")
 
 
@@ -69,9 +69,9 @@ def run_app(path):
     while True:
         gesture = pipeline.process()
         print(gesture)
-        if gesture != "idle":
+        if gesture != "idle" and gesture is not None:
             send_command(gesture)
-            time.sleep(2.0)
+            # time.sleep(2.0)
 
 
 if __name__ == '__main__':
