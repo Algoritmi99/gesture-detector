@@ -8,7 +8,7 @@ from gesture_detector.buffer import Buffer
 
 
 def read_keypoint_names():
-    with open("keypoint_mapping.yml", "r") as yaml_file:
+    with open("../keypoint_mapping.yml", "r") as yaml_file:
         mappings = yaml.safe_load(yaml_file)
         keypoint_names = mappings["face"]
         keypoint_names += mappings["body"]
