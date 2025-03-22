@@ -42,8 +42,9 @@ def train_new(dataset: tuple[pd.DataFrame, pd.DataFrame], pose_detector: PoseDet
     buffer_y = Buffer(buffer_size)
 
     nn_dataset_x = pd.DataFrame()
-    nn_dataset_y = pd.DataFrame()
+    nn_dataset_y = pd.DataFrame(columns=[i for i in one_hot_encoder.classes])
 
+    df_init = False
     print("Running buffering on data...")
     for idx in tqdm(range(len(reduced_features))):
         buffer_x.add(reduced_features.iloc[idx].to_numpy())
@@ -53,6 +54,9 @@ def train_new(dataset: tuple[pd.DataFrame, pd.DataFrame], pose_detector: PoseDet
         next_y = buffer_y.get_flatten()
 
         if next_x is not None and next_y is not None:
+            if not df_init:
+                df_init = True
+                nn_dataset_x = pd.DataFrame(columns=[str(i) for i in range(len(next_x))])
             label = Counter(next_y.tolist()).most_common(1)[0][0]
             next_y = one_hot_encoder.encode(label)
 

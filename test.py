@@ -1,4 +1,5 @@
 import numpy as np
+import pandas as pd
 import yaml
 
 from gesture_detector.feature_extraction import FeatureExtractor
@@ -30,6 +31,10 @@ def main():
         print(buffer.get_flatten())
 
 if __name__ == '__main__':
-    print(type(150 // 29))
-    main()
+    # print(type(150 // 29))
+    # main()
     # show_cam_pose()
+    df = pd.DataFrame(columns=["1", "2", "3"])
+    # df.columns = ["1", "2", "3"]
+    df.loc[len(df)] = [1, 2, 3]
+    print(df)
