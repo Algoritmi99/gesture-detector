@@ -1,6 +1,7 @@
 from collections import Counter
 
 import light
+import numpy as np
 import pandas as pd
 from light.trainer import Trainer
 from tqdm import tqdm
@@ -63,12 +64,15 @@ def train_new(dataset: tuple[pd.DataFrame, pd.DataFrame], pose_detector: PoseDet
             nn_dataset_x.loc[len(nn_dataset_x)] = next_x
             nn_dataset_y.loc[len(nn_dataset_y)] = next_y
 
-    # Shuffle data
+    # Shuffle and clean data
     df_combined = pd.concat([nn_dataset_x, nn_dataset_y], axis=1)
     df_shuffled = df_combined.sample(frac=1, random_state=42).reset_index(drop=True)
-    nn_dataset_x = df_shuffled.iloc[:, :-1]  # First columns
-    nn_dataset_y = df_shuffled.iloc[:, -1]  # Last column
-    nn_dataset_y = nn_dataset_y.to_frame()
+    df_shuffled.dropna(inplace=True)
+    df_shuffled.applymap(lambda item: np.real(item) if isinstance(item, complex) else item)
+    df_shuffled = df_shuffled.astype(np.float32)
+    nn_dataset_x = df_shuffled.iloc[:, :-len(one_hot_encoder.classes)]  # First columns
+    nn_dataset_y = df_shuffled.iloc[:, -len(one_hot_encoder.classes):]  # Last columns
+    # nn_dataset_y = nn_dataset_y.to_frame()
 
     # Train/Test split
     X_train, X_test, y_train, y_test = light.train_test_split(nn_dataset_x, nn_dataset_y, 0.8)
