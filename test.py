@@ -15,13 +15,13 @@ def read_keypoint_names():
 
 def show_cam_pose():
     keypoint_names = read_keypoint_names()
-    posedetector = LiveFeedPoseDetector("2", keypoint_names, show_feed=True)
+    posedetector = LiveFeedPoseDetector("0", keypoint_names, show_feed=True)
     feature_extractor = FeatureExtractor()
 
     while True:
         pose = posedetector.get_pose()
         feature_vector = feature_extractor.extract_features(pose)
-        print(len(feature_vector) if feature_extractor is not None else None)
+        print(len(feature_vector) if feature_vector is not None else None)
 
 def main():
     buffer  = Buffer(5)
