@@ -58,7 +58,7 @@ def train_and_save():
     pose_detector = LiveFeedPoseDetector("0", keypoint_names, show_feed=True)
 
     print("Running Model Trainer...")
-    pipeline = train_new((x, y), pose_detector, 150, 0.2)
+    pipeline = train_new((x, y), pose_detector, 200, 0.2)
     pipeline.save("./pipelines", "gesture_detector")
 
 

@@ -37,7 +37,7 @@ def train_new(dataset: tuple[pd.DataFrame, pd.DataFrame], pose_detector: PoseDet
 
     one_hot_encoder = light.OneHotEncoder(y.iloc[:, 0].unique())
 
-    buffer_size = model_input_length // pca.n_components
+    buffer_size = int(model_input_length // pca.n_components)
     buffer_x = Buffer(buffer_size)
     buffer_y = Buffer(buffer_size)
 

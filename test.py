@@ -24,11 +24,12 @@ def show_cam_pose():
         print(len(feature_vector) if feature_vector is not None else None)
 
 def main():
-    buffer  = Buffer(5)
+    buffer  = Buffer(150//29)
     for i in range(100):
-        buffer.add(np.array([i, i ** 2, i ** 3]))
+        buffer.add(np.array([i / 3, i ** 2 / 3, i ** 3 / 3]))
         print(buffer.get_flatten())
 
 if __name__ == '__main__':
-    # main()
-    show_cam_pose()
+    print(type(150 // 29))
+    main()
+    # show_cam_pose()
