@@ -22,9 +22,11 @@ pose_pairs = list(combinations(important_poses, 2))
 
 
 class FeatureExtractor:
-    def __init__(self):
+    def __init__(self, skip_window = 5):
         self.last_time = None
         self.last_vector = None
+        self.skip_window = skip_window
+        self.__counter = 0
 
     def extract_features(self, raw_landmarks: dict) -> np.ndarray:
         """
@@ -119,7 +121,9 @@ class FeatureExtractor:
             assert len(out) == len(self.last_vector)
 
         # save output and last time
-        self.last_vector = copy.deepcopy(out)
-        self.last_time = raw_landmarks["timestamp"]
+        if (self.last_vector is None and self.last_time is None) or (self.__counter % self.skip_window == 0):
+            self.last_vector = copy.deepcopy(out)
+            self.last_time = raw_landmarks["timestamp"]
+        self.__counter += 1
 
         return np.array(out)

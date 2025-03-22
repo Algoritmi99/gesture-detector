@@ -28,7 +28,11 @@ def train_new(dataset: tuple[pd.DataFrame, pd.DataFrame], pose_detector: PoseDet
 
     print("Running feature extractor on data...")
     feature_extractor = FeatureExtractor()
-    features = pd.DataFrame(x.apply(lambda row: feature_extractor.extract_features(row.to_dict()), axis=1).tolist())
+    features_list = []
+    for _, row in x.iterrows():
+        features_list.append(feature_extractor.extract_features(row.to_dict()).tolist())
+
+    features = pd.DataFrame(features_list)
 
     print("Running PCA on data...")
     pca = light.PCA(variance_threshold=0.99)

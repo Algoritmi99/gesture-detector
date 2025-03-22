@@ -8,7 +8,7 @@ from gesture_detector.buffer import Buffer
 
 
 def read_keypoint_names():
-    with open("../keypoint_mapping.yml", "r") as yaml_file:
+    with open("./keypoint_mapping.yml", "r") as yaml_file:
         mappings = yaml.safe_load(yaml_file)
         keypoint_names = mappings["face"]
         keypoint_names += mappings["body"]
@@ -33,8 +33,6 @@ def main():
 if __name__ == '__main__':
     # print(type(150 // 29))
     # main()
-    # show_cam_pose()
-    df = pd.DataFrame(columns=["1", "2", "3"])
-    # df.columns = ["1", "2", "3"]
-    df.loc[len(df)] = [1, 2, 3]
-    print(df)
+    show_cam_pose()
+    # df = pd.DataFrame([[1, 2, 3], [4, 5, 6], [7, 8, 9]])
+    # print(df)
