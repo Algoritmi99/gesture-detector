@@ -1,4 +1,6 @@
 import argparse
+import time
+
 import pandas as pd
 import websockets
 import yaml
@@ -55,18 +57,21 @@ def train_and_save():
         next_line.append(int(row["timestamp"]))
         x.loc[len(x)] = next_line
 
-    pose_detector = LiveFeedPoseDetector("0", keypoint_names, show_feed=True)
 
     print("Running Model Trainer...")
-    pipeline = train_new((x, y), pose_detector, 200, 0.2)
+    pipeline = train_new((x, y), None, 200, 0.2)
     pipeline.save("./pipelines", "gesture_detector")
 
 
 def run_app(path):
     pipeline = load_pipeline(path)
+    pipeline.set_pose_detector(LiveFeedPoseDetector("0", read_keypoint_names(), show_feed=True))
     while True:
         gesture = pipeline.process()
         print(gesture)
+        if gesture != "idle":
+            send_command(gesture)
+            time.sleep(2.0)
 
 
 if __name__ == '__main__':

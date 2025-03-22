@@ -42,6 +42,7 @@ class GestureDetectorPipeline:
 
 
     def process(self):
+        assert self.pose_detector is not None, "set pose detector!"
         pose = self.pose_detector.get_pose()
         feature_vector = self.feature_extractor.extract_features(pose)
         feature_vector = self.pca.transform(feature_vector)
@@ -62,4 +63,8 @@ class GestureDetectorPipeline:
         :param file_name: The file name to save the module to.
         :return: null
         """
+
         save_pipeline(self, save_path, file_name)
+
+    def set_pose_detector(self, pose_detector: PoseDetector):
+        self.pose_detector = pose_detector
