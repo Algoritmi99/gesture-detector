@@ -66,7 +66,7 @@ def run_app(path):
     pipeline = load_pipeline(path)
     while True:
         gesture = pipeline.process()
-        print(gesture)
+        send_command(gesture)
 
 
 if __name__ == '__main__':
