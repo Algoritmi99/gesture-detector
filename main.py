@@ -59,8 +59,8 @@ def train_and_save():
 
 
     print("Running Model Trainer...")
-    pipeline = train_new((x, y), None, 500, 0.4)
-    pipeline.save("./pipelines", "gesture_detector")
+    pipeline = train_new((x, y), None, 700, 0.4)
+    pipeline.save("./pipelines", "gesture_detector700_0.4")
 
 
 def run_app(path):

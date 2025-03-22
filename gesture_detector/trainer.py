@@ -72,7 +72,6 @@ def train_new(dataset: tuple[pd.DataFrame, pd.DataFrame], pose_detector: PoseDet
     df_shuffled = df_shuffled.astype(np.float32)
     nn_dataset_x = df_shuffled.iloc[:, :-len(one_hot_encoder.classes)]  # First columns
     nn_dataset_y = df_shuffled.iloc[:, -len(one_hot_encoder.classes):]  # Last columns
-    # nn_dataset_y = nn_dataset_y.to_frame()
 
     # Train/Test split
     X_train, X_test, y_train, y_test = light.train_test_split(nn_dataset_x, nn_dataset_y, 0.8)
