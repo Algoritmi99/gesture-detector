@@ -63,9 +63,17 @@ def train_new(dataset: tuple[pd.DataFrame, pd.DataFrame], pose_detector: PoseDet
             nn_dataset_x.loc[len(nn_dataset_x)] = next_x
             nn_dataset_y.loc[len(nn_dataset_y)] = next_y
 
+    # Shuffle data
+    df_combined = pd.concat([nn_dataset_x, nn_dataset_y], axis=1)
+    df_shuffled = df_combined.sample(frac=1, random_state=42).reset_index(drop=True)
+    nn_dataset_x = df_shuffled.iloc[:, :-1]  # First columns
+    nn_dataset_y = df_shuffled.iloc[:, -1]  # Last column
+    nn_dataset_y = nn_dataset_y.to_frame()
+
+    # Train/Test split
     X_train, X_test, y_train, y_test = light.train_test_split(nn_dataset_x, nn_dataset_y, 0.8)
 
-    # Train the NN
+    # Create and Train the NN
     net = FFNClassifier(
         X_train.shape[1],
         int(X_train.shape[1] * model_hidden_ratio),
