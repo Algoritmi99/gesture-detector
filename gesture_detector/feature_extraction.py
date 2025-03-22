@@ -53,18 +53,19 @@ class FeatureExtractor:
             if self.last_time is None and self.last_vector is None:
                 out.extend([0] * 6)
             else:
+                d_t = raw_landmarks["timestamp"] - self.last_time
                 # Velocity
                 x = raw_landmarks[pose_name].x
                 y = raw_landmarks[pose_name].y
                 lastX = self.last_vector[len(out) - 2]
                 lastY = self.last_vector[len(out) - 1]
-                out.append((x - lastX) / (raw_landmarks["timestamp"] - self.last_time))
-                out.append((y - lastY) / (raw_landmarks["timestamp"] - self.last_time))
+                out.append((x - lastX) / (d_t if d_t > 0 else 1))
+                out.append((y - lastY) / (d_t if d_t > 0 else 1))
                 out.append(
                     float(np.sqrt(
                         ((x - lastX) ** 2) +
                         ((y - lastY) ** 2)
-                    ) / (raw_landmarks["timestamp"] - self.last_time)
+                    ) / (d_t if d_t > 0 else 1)
                 ))
                 # Acceleration
                 v_x = out[len(out) - 3]
@@ -73,10 +74,10 @@ class FeatureExtractor:
                 last_v_x = self.last_vector[len(out) - 3]
                 last_v_y = self.last_vector[len(out) - 2]
                 last_v_d = self.last_vector[len(out) - 1]
-                out.append((v_x - last_v_x) / (raw_landmarks["timestamp"] - self.last_time))
-                out.append((v_y - last_v_y) / (raw_landmarks["timestamp"] - self.last_time))
+                out.append((v_x - last_v_x) / (d_t if d_t > 0 else 1))
+                out.append((v_y - last_v_y) / (d_t if d_t > 0 else 1))
                 out.append(
-                    (v_d - last_v_d) / (raw_landmarks["timestamp"] - self.last_time)
+                    (v_d - last_v_d) / (d_t if d_t > 0 else 1)
                 )
 
         # - Per joint pair:
