@@ -71,7 +71,7 @@ def train_and_save():
 
 
     print("Running Model Trainer...")
-    pipeline = train_new((x, y), None, 1100, 0.4)
+    pipeline = train_new((x, y), None, 700, 0.4)
     pipeline.save("./pipelines", "gesture_detector1100_0.4")
 
 
