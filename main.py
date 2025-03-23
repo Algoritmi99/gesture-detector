@@ -94,16 +94,6 @@ def run_app(path):
                     send_command(gesture)
                     last_time = timestamp
 
-
-    # last_gesture = "idle"
-    # while True:
-    #     gesture = pipeline.process()
-    #     if gesture is not None:
-    #         if gesture == last_gesture and gesture != "idle":
-    #             print(gesture)
-    #             send_command(gesture)
-    #     last_gesture = gesture
-
 if __name__ == '__main__':
     parser = argparse.ArgumentParser()
 
