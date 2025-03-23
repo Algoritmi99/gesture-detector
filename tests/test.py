@@ -27,12 +27,12 @@ def show_cam_pose():
 def main():
     buffer  = Buffer(150//29)
     for i in range(100):
-        buffer.add(np.array([i / 3, i ** 2 / 3, i ** 3 / 3]))
+        buffer.add(i)
         print(buffer.get_flatten())
 
 if __name__ == '__main__':
     # print(type(150 // 29))
-    # main()
-    show_cam_pose()
+    main()
+    # show_cam_pose()
     # df = pd.DataFrame([[1, 2, 3], [4, 5, 6], [7, 8, 9]])
     # print(df)

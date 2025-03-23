@@ -1,14 +1,26 @@
 import argparse
 import time
 
+import numpy as np
 import pandas as pd
 import websockets
 import yaml
 from tqdm import tqdm
 
+from gesture_detector.buffer import Buffer
 from gesture_detector.pose_detection import LiveFeedPoseDetector
 from gesture_detector.trainer import train_new
 from gesture_detector.pipeline import load_pipeline
+
+
+def most_common_element(arr, thresh=0.8):
+    unique_elements, counts = np.unique(arr, return_counts=True)
+    max_count_index = np.argmax(counts)
+    max_count = counts[max_count_index]
+
+    if max_count > thresh * arr.size:
+        return unique_elements[max_count_index]
+    return None
 
 
 async def send_command(command):
@@ -59,20 +71,35 @@ def train_and_save():
 
 
     print("Running Model Trainer...")
-    pipeline = train_new((x, y), None, 700, 0.4)
-    pipeline.save("./pipelines", "gesture_detector700_0.4")
+    pipeline = train_new((x, y), None, 1100, 0.4)
+    pipeline.save("./pipelines", "gesture_detector1100_0.4")
 
 
 def run_app(path):
     pipeline = load_pipeline(path)
     pipeline.set_pose_detector(LiveFeedPoseDetector("0", read_keypoint_names(), show_feed=True))
-    while True:
-        gesture = pipeline.process()
-        print(gesture)
-        if gesture != "idle" and gesture is not None:
-            send_command(gesture)
-            # time.sleep(2.0)
 
+    buffer = Buffer(20)
+    while True:
+        pipe_out = pipeline.process()
+        if pipe_out is not None:
+            buffer.add(pipe_out)
+            vector = buffer.get_flatten()
+            if vector is not None:
+                gesture = most_common_element(vector, thresh=0.6)
+                if gesture is not None and gesture != "idle":
+                    print(gesture)
+                    send_command(gesture)
+
+
+    # last_gesture = "idle"
+    # while True:
+    #     gesture = pipeline.process()
+    #     if gesture is not None:
+    #         if gesture == last_gesture and gesture != "idle":
+    #             print(gesture)
+    #             send_command(gesture)
+    #     last_gesture = gesture
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser()
