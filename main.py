@@ -80,6 +80,7 @@ def run_app(path):
     pipeline.set_pose_detector(LiveFeedPoseDetector("0", read_keypoint_names(), show_feed=True))
 
     buffer = Buffer(20)
+    last_time = int(time.time())
     while True:
         pipe_out = pipeline.process()
         if pipe_out is not None:
@@ -87,9 +88,11 @@ def run_app(path):
             vector = buffer.get_flatten()
             if vector is not None:
                 gesture = most_common_element(vector, thresh=0.6)
-                if gesture is not None and gesture != "idle":
+                timestamp = int(time.time())
+                if gesture is not None and gesture != "idle" and timestamp - last_time > 1:
                     print(gesture)
                     send_command(gesture)
+                    last_time = timestamp
 
 
     # last_gesture = "idle"
