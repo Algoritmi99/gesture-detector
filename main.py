@@ -1,4 +1,5 @@
 import argparse
+import asyncio
 import time
 
 import numpy as np
@@ -91,7 +92,10 @@ def run_app(path):
                 timestamp = int(time.time())
                 if gesture is not None and gesture != "idle" and timestamp - last_time > 1:
                     print(gesture)
-                    send_command(gesture)
+                    try:
+                        asyncio.run(send_command(gesture))
+                    except Exception as e:
+                        print(e)
                     last_time = timestamp
 
 if __name__ == '__main__':
